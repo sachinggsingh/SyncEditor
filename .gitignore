@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+*.test.js.snap
+
+# Production
+/build
+/dist
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+debug.log
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temp files
+*.swp
+*.swo
+*~
+
+# Lock files
+# Uncomment if you want to ignore lock files
+# package-lock.json
+# yarn.lock
+
+# Project specific
+/Server/node_modules
+/synceditor/node_modules
+/Server/.env
+/synceditor/.env
