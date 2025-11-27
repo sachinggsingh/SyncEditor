@@ -71,6 +71,24 @@ const JoinRoom = () => {
     [username]
   );
 
+  // Store handlers in refs to avoid re-registering listeners
+  const handlersRef = useRef({
+    handleUserJoined,
+    handleUserLeft,
+    handleUserDisconnected,
+    handleCodeChange
+  });
+
+  // Update refs when handlers change
+  useEffect(() => {
+    handlersRef.current = {
+      handleUserJoined,
+      handleUserLeft,
+      handleUserDisconnected,
+      handleCodeChange
+    };
+  }, [handleUserJoined, handleUserLeft, handleUserDisconnected, handleCodeChange]);
+
   // Initialize socket connection
   useEffect(() => {
     if (!roomId || !username) {
@@ -110,11 +128,11 @@ const JoinRoom = () => {
       toast.error("Connection error. Retrying...");
     });
 
-    // Setup event listeners
-    socketManager.onUserJoined(handleUserJoined);
-    socketManager.onUserLeft(handleUserLeft);
-    socketManager.onUserDisconnected(handleUserDisconnected);
-    socketManager.onCodeChange(handleCodeChange);
+    // Setup event listeners using refs
+    socketManager.onUserJoined((data) => handlersRef.current.handleUserJoined(data));
+    socketManager.onUserLeft((data) => handlersRef.current.handleUserLeft(data));
+    socketManager.onUserDisconnected((data) => handlersRef.current.handleUserDisconnected(data));
+    socketManager.onCodeChange((data) => handlersRef.current.handleCodeChange(data));
 
     // Handle messages
     socketManager.onMessage((messageData) => {
@@ -134,30 +152,27 @@ const JoinRoom = () => {
       });
     });
 
+    // Handle code output sync
+    socketManager.onCodeOutput(({ output, sender }) => {
+      setOutput(output);
+      if (sender !== username) {
+        toast.success(`${sender} executed code`);
+      }
+    });
+
     // Join room
     socketManager.joinRoom(roomId, username);
 
     // Cleanup
     return () => {
-      if (isConnected) {
-        socketManager.leaveRoom(roomId, username);
-        socketManager.removeAllListeners();
-        socketManager.disconnect();
-        setIsConnected(false);
-        setUsers([]);
-        setMessage([]); // Clear messages on disconnect
-      }
+      socketManager.leaveRoom(roomId, username);
+      socketManager.removeAllListeners();
+      socketManager.disconnect();
+      setIsConnected(false);
+      setUsers([]);
+      setMessage([]); // Clear messages on disconnect
     };
-  }, [
-    roomId,
-    username,
-    navigate,
-    handleUserJoined,
-    handleUserLeft,
-    handleUserDisconnected,
-    handleCodeChange,
-    isConnected,
-  ]);
+  }, [roomId, username, navigate]);
 
   const handleMessage = (content) => {
     if (isConnected && roomId) {
@@ -176,7 +191,7 @@ const JoinRoom = () => {
       setMessage((prev) => [...prev, messageData]);
 
       // Send to server
-      socketManager.emmitMessage(roomId, content, username);
+      socketManager.emitMessage(roomId, content, username);
     }
   };
 
@@ -214,7 +229,7 @@ const JoinRoom = () => {
     try {
       const language =
         selectedLanguage === "typescript" ? "javascript" : selectedLanguage;
-      const res = await fetch(import.meta.env.PISTON_API, {
+      const res = await fetch(import.meta.env.VITE_PISTON_API || 'https://emkc.org/api/v2/piston/execute', {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -241,24 +256,47 @@ const JoinRoom = () => {
 
       const data = await res.json();
 
+      let executionOutput = "";
+      let hasError = false;
+
       if (data.run?.output) {
-        setOutput(data.run.output);
+        executionOutput = data.run.output;
+        hasError = data.run?.code !== 0;
       } else if (data.compile?.output) {
-        setOutput(data.compile.output);
+        executionOutput = data.compile.output;
+        hasError = true; // Compilation output usually means error
       } else if (data.message) {
-        setOutput(data.message);
+        executionOutput = data.message;
+        hasError = true;
       } else {
-        setOutput("No output");
+        executionOutput = "No output";
+        hasError = false;
       }
 
-      if (data.run?.code !== 0 || data.compile?.code !== 0) {
+      // Set output locally
+      setOutput(executionOutput);
+
+      // Emit output to other users in the room
+      if (isConnected && roomId) {
+        socketManager.emitCodeOutput(roomId, executionOutput, username);
+      }
+
+      // Show appropriate toast
+      if (hasError) {
         toast.error("Code execution failed");
       } else {
         toast.success("Code executed successfully");
       }
     } catch (error) {
       console.error("Execution error:", error);
-      setOutput(`Error: ${error.message}`);
+      const errorOutput = `Error: ${error.message}`;
+      setOutput(errorOutput);
+      
+      // Emit error output to other users
+      if (isConnected && roomId) {
+        socketManager.emitCodeOutput(roomId, errorOutput, username);
+      }
+      
       toast.error("Failed to execute code");
     } finally {
       setIsRunning(false);
@@ -321,6 +359,7 @@ const JoinRoom = () => {
         onLeave={handleLeaveRoom}
         startSidebarResize={startSidebarResize}
         sidebarWidth={sidebarWidth}
+        isConnected={isConnected}
       />
 
       <div className="flex flex-col flex-1">

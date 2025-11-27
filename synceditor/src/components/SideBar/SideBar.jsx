@@ -4,8 +4,10 @@ import UserList from "./UserList";
 import Resizer from "../Layout/Resizer";
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import ConnectionStatus from '../UI/ConnectionStatus';
+import PropTypes from 'prop-types';
 
-const Sidebar = memo(({ roomId, users, onLeave, startSidebarResize, sidebarWidth }) => {
+const Sidebar = memo(({ roomId, users, onLeave, startSidebarResize, sidebarWidth, isConnected = true }) => {
   const [isCopied, setIsCopied] = useState(false);
 
   const handleCopyRoomId = async () => {
@@ -28,12 +30,18 @@ const Sidebar = memo(({ roomId, users, onLeave, startSidebarResize, sidebarWidth
       <Resizer direction="horizontal" onMouseDown={startSidebarResize} />
       <div>
         <div className="p-4 border-b border-gray-700">
+          {/* Connection Status */}
+          <div className="mb-3 pb-3 border-b border-gray-700">
+            <ConnectionStatus isConnected={isConnected} />
+          </div>
+
           <div className="flex items-center justify-between gap-2 mb-4">
             <h1 className="text-lg font-bold text-blue-400">Room ID</h1>
             <button
               onClick={handleCopyRoomId}
               className="p-1 hover:bg-gray-700 rounded transition-colors"
               title="Copy Room ID"
+              aria-label="Copy Room ID to clipboard"
             >
               {isCopied ? (
                 <Check size={16} className="text-green-400" />
@@ -59,6 +67,7 @@ const Sidebar = memo(({ roomId, users, onLeave, startSidebarResize, sidebarWidth
         <button
           onClick={onLeave}
           className="w-full flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors duration-200"
+          aria-label="Leave the room"
         >
           <LogOut className="mr-2" size={16} />
           Leave Room
@@ -74,4 +83,18 @@ const Sidebar = memo(({ roomId, users, onLeave, startSidebarResize, sidebarWidth
 });
 
 Sidebar.displayName = 'Sidebar';
+
+Sidebar.propTypes = {
+  roomId: PropTypes.string.isRequired,
+  users: PropTypes.arrayOf(PropTypes.shape({
+    socketId: PropTypes.string.isRequired,
+    username: PropTypes.string.isRequired
+  })).isRequired,
+  onLeave: PropTypes.func.isRequired,
+  startSidebarResize: PropTypes.func.isRequired,
+  sidebarWidth: PropTypes.number.isRequired,
+  isConnected: PropTypes.bool
+};
+
 export default Sidebar;
+

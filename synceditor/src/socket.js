@@ -105,9 +105,9 @@ class SocketManager {
   }
 
   // Code sync events
-  emitCodeChange(roomId, code, sender,username) {
+  emitCodeChange(roomId, code, sender, username) {
     if (!this.socket || !roomId) return;
-    this.socket.emit('code-change', { roomId, code, sender,username });
+    this.socket.emit('code-change', { roomId, code, sender, username });
   }
 
   onCodeChange(callback) {
@@ -146,7 +146,7 @@ class SocketManager {
   }
 
   // Message events
-  emmitMessage(roomId, message, sender) {
+  emitMessage(roomId, message, sender) {
     if (!this.socket || !roomId) return;
     this.socket.emit('send-message', {
       roomId,
@@ -161,6 +161,23 @@ class SocketManager {
     // Remove existing listeners before adding new one
     this.socket.off('receive-message');
     this.socket.on('receive-message', callback);
+  }
+
+  // Code output events
+  emitCodeOutput(roomId, output, sender) {
+    if (!this.socket || !roomId) return;
+    this.socket.emit('code-output', {
+      roomId,
+      output,
+      sender
+    });
+  }
+
+  onCodeOutput(callback) {
+    if (!this.socket || !callback) return;
+    // Remove existing listeners before adding new one
+    this.socket.off('code-output');
+    this.socket.on('code-output', callback);
   }
 }
 

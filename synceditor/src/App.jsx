@@ -3,10 +3,11 @@ import "./App.css";
 import HomePage from "./components/HomePage";
 import JoinRoom from "./components/JoinRoom";
 import { Toaster } from "react-hot-toast";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function App() {
   return (
-    <>
+    <ErrorBoundary>
       <div>
         <Toaster
           position="top-right"
@@ -33,7 +34,7 @@ function App() {
           <Route path="/room" element={<JoinRoom />} />
         </Routes>
       </BrowserRouter>
-    </>
+    </ErrorBoundary>
   );
 }
 
