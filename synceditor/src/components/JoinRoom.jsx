@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
 import socketManager from "../socket";
-import Sidebar from "./Sidebar/Sidebar";
+import Sidebar from "./SideBar/SideBar"
 import LanguageSelector from "./UI/LanguageSelector";
 import RunButton from "./UI/RunButton";
 import EditorPanel from "./EditorPannel/EditorPannel";
