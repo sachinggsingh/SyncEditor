@@ -3,12 +3,8 @@ import { Code2 } from 'lucide-react';
 
 const LANGUAGES = [
   { value: 'javascript', label: 'JavaScript', extension: '.js' },
-  { value: 'python', label: 'Python', extension: '.py' },
-  { value: 'java', label: 'Java', extension: '.java' },
-  { value: 'cpp', label: 'C++', extension: '.cpp' },
-  { value: 'csharp', label: 'C#', extension: '.cs' },
   { value: 'typescript', label: 'TypeScript', extension: '.ts' },
-  { value: 'ruby', label: 'Ruby', extension: '.rb' },
+  { value: 'java', label: 'Java', extension: '.java' },
   { value: 'go', label: 'Go', extension: '.go' },
 ];
 

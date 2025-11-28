@@ -41,7 +41,7 @@ const EditorPanel = forwardRef(({
     // Update editor options when language changes
     if (editorRef.current) {
       editorRef.current.updateOptions({
-        tabSize: selectedLanguage === "python" ? 4 : 2,
+        tabSize: (selectedLanguage === "java" || selectedLanguage === "go") ? 4 : 2,
       });
     }
   }, [selectedLanguage]);
@@ -50,7 +50,7 @@ const EditorPanel = forwardRef(({
     editorRef.current = editor;
     // Set initial options
     editor.updateOptions({
-      tabSize: selectedLanguage === "python" ? 4 : 2,
+      tabSize: (selectedLanguage === "java" || selectedLanguage === "go") ? 4 : 2,
       wordWrap: "on",
       readOnly: isTyping, // Make editor read-only during typing effect
     });

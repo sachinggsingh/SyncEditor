@@ -227,8 +227,7 @@ const JoinRoom = () => {
     setOutput("");
 
     try {
-      const language =
-        selectedLanguage === "typescript" ? "javascript" : selectedLanguage;
+      const language = selectedLanguage;
       const res = await fetch(import.meta.env.VITE_PISTON_API || 'https://emkc.org/api/v2/piston/execute', {
         method: "POST",
         headers: {
@@ -369,27 +368,38 @@ const JoinRoom = () => {
             onChange={(e) => {
               const newLanguage = e.target.value;
               setSelectedLanguage(newLanguage);
-              if (code === "// Start coding..." || !code.trim()) {
-                const template = `// ${newLanguage} code example
-${newLanguage === "python"
-                    ? 'print("Hello, World!")'
-                    : newLanguage === "java"
-                      ? `public class Main {
+              
+              let templateCode = `console.log("Hello, World!");`;
+              if (newLanguage === "java") {
+                templateCode = `public class Main {
     public static void main(String[] args) {
         System.out.println("Hello, World!");
     }
-}`
-                      : newLanguage === "cpp"
-                        ? `#include <iostream>
+}`;
+              } else if (newLanguage === "go") {
+                templateCode = `package main
 
-int main() {
-    std::cout << "Hello, World!" << std::endl;
-    return 0;
-}`
-                        : 'console.log("Hello, World!");'
-                  }`;
-                setCode(template);
+import "fmt"
+
+func main() {
+    fmt.Println("Hello, World!")
+}`;
+              } else if (newLanguage === "typescript") {
+                templateCode = `interface User {
+  name: string;
+  id: number;
+}
+
+const user: User = {
+  name: "World",
+  id: 1,
+};
+
+console.log("Hello, " + user.name + "!");`;
+              } else {
+                templateCode = 'console.log("Hello, World!");';
               }
+              setCode(`// ${newLanguage} code example\n${templateCode}`);
             }}
           />
           <RunButton isRunning={isRunning} onRun={handleRun} />
