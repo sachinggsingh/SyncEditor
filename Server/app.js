@@ -7,11 +7,14 @@ const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
 const { validateRoomId, validateUsername, validateMessage, validateCode } = require('./middleware/validator');
+const { verifyClerkToken } = require('./middleware/clerkAuth');
+
 
 const server = http.createServer(app);
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
 const PORT = process.env.PORT || 5555;
+
 
 // Security middleware
 app.use(helmet({
@@ -44,6 +47,9 @@ const io = new Server(server, {
     pingInterval: 30000,
     transports: ['websocket', 'polling']
 });
+
+// Add Clerk authentication middleware to Socket.IO
+io.use(verifyClerkToken);
 
 const userSocketMap = {};
 const getAllConnectedClients = (roomId) => {
@@ -139,19 +145,23 @@ io.on('connection', (socket) => {
     });
 
     // Handle disconnection
-    socket.on('disconnect', () => {
+    socket.on('disconnecting', () => {
         try {
-            // Find all rooms this socket was in
             const rooms = [...socket.rooms];
-            rooms.forEach(roomId => {
-                const clients = getAllConnectedClients(roomId);
-                clients.forEach(({ socketId }) => {
-                    io.to(socketId).emit('user-disconnected', {
-                        socketId: socket.id,
-                        username: userSocketMap[socket.id]
-                    });
+            rooms.forEach((roomId) => {
+                // Notify other clients in the room
+                socket.in(roomId).emit('user-disconnected', {
+                    socketId: socket.id,
+                    username: userSocketMap[socket.id] || 'Anonymous'
                 });
             });
+        } catch (error) {
+            console.error('Disconnecting error:', error);
+        }
+    });
+
+    socket.on('disconnect', () => {
+        try {
             delete userSocketMap[socket.id];
         } catch (error) {
             console.error('Disconnect error:', error);
@@ -159,8 +169,9 @@ io.on('connection', (socket) => {
     });
 
     // Handle leaving room
-    socket.on('leave', ({ roomId, username }) => {
+    socket.on('leave', ({ roomId }) => {
         try {
+            const username = userSocketMap[socket.id] || 'Anonymous';
             socket.leave(roomId);
             const clients = getAllConnectedClients(roomId);
             clients.forEach(({ socketId }) => {

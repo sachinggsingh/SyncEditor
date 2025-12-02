@@ -1,14 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Users, PlusCircle } from "lucide-react";
 import { v4 as uuid } from "uuid";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import { useUser, UserButton } from "@clerk/clerk-react";
 
 function HomePage() {
   const navigate = useNavigate();
+  const { user } = useUser();
   const [roomId, setRoomId] = useState("");
   const [username, setUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pre-fill username from Clerk user data
+  useEffect(() => {
+    if (user) {
+      const displayName = user.fullName || user.username || user.firstName || "";
+      setUsername(displayName);
+    }
+  }, [user]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -55,13 +65,24 @@ function HomePage() {
       <div className="w-full max-w-md">
         <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden border border-gray-700">
           <div className="bg-gray-700 px-6 py-4 text-white">
-            <h2 className="text-2xl font-bold flex items-center">
-              <Users className="mr-2" />
-              Join Room
-            </h2>
-            <p className="text-gray-300 mt-1">
-              Connect with others in real-time
-            </p>
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold flex items-center">
+                  <Users className="mr-2" />
+                  Join Room
+                </h2>
+                <p className="text-gray-300 mt-1">
+                  Connect with others in real-time
+                </p>
+              </div>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10",
+                  },
+                }}
+              />
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-4">

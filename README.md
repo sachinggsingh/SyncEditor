@@ -22,13 +22,15 @@
 ## ✨ Features
 
 ### 🎯 Core Capabilities
+- **User Authentication** - Secure sign-up and sign-in with Clerk
 - **Real-Time Collaboration** - Multiple users editing simultaneously with instant sync
-- **Multi-Language Support** - JavaScript, TypeScript, Python, Java, C++ with syntax highlighting
+- **Multi-Language Support** - JavaScript, TypeScript, Java, Go with syntax highlighting
 - **Live Code Execution** - Run code directly in the browser with instant output via Piston API
 - **Integrated Chat** - Communicate with collaborators without leaving the editor
 - **Room-Based Sessions** - Create or join rooms with unique shareable IDs
 
 ### 🎨 User Experience
+- **User Profiles** - Display user avatars and names from Clerk
 - **Color-Coded Users** - Each user gets a unique color and avatar for easy identification
 - **Connection Status** - Real-time connection monitoring
 - **Responsive Design** - Works seamlessly on desktop and mobile
@@ -37,6 +39,8 @@
 - **Monaco Editor** - VS Code-like editing experience
 
 ### 🔒 Security & Performance
+- **Clerk Authentication** - Enterprise-grade authentication and user management
+- **Authenticated WebSockets** - All Socket.IO connections verified with JWT tokens
 - **Input Validation** - All user inputs validated and sanitized
 - **Rate Limiting** - Protection against abuse and spam
 - **Security Headers** - Helmet.js for production security
@@ -50,6 +54,7 @@
 ### Prerequisites
 - Node.js >= 16.x
 - npm >= 8.x
+- **Clerk Account** - Sign up at [clerk.com](https://clerk.com)
 
 ### Installation
 
@@ -62,14 +67,19 @@ cd SyncEditor
 cd Server
 npm install
 cp .env.example .env
+# Add your Clerk secret key to .env
 npm run dev
 
 # Setup Frontend (in a new terminal)
 cd ../synceditor
 npm install
 cp .env.example .env
+# Add your Clerk publishable key to .env
 npm run dev
 ```
+
+> [!IMPORTANT]
+> **Clerk Setup Required**: Follow the [Clerk Setup Guide](CLERK_SETUP.md) to configure authentication before running the application.
 
 ### Access the Application
 - **Frontend**: http://localhost:5173
@@ -114,6 +124,7 @@ SyncEditor/
 
 ## 📚 Documentation
 
+- **[Clerk Setup Guide](CLERK_SETUP.md)** - Complete authentication setup instructions
 - **[Frontend Documentation](synceditor/README.md)** - React app setup, features, and usage
 - **[Backend Documentation](Server/README.md)** - Server API, Socket.IO events, and deployment
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
@@ -124,6 +135,7 @@ SyncEditor/
 
 ### Frontend
 - React 18.3.1 with Hooks
+- **Clerk React SDK** - Authentication
 - Vite (Build tool)
 - Socket.IO Client
 - Monaco Editor / CodeMirror
@@ -134,6 +146,7 @@ SyncEditor/
 
 ### Backend
 - Node.js + Express
+- **Clerk Node SDK** - Authentication
 - Socket.IO
 - Helmet (Security)
 - Compression
@@ -145,6 +158,8 @@ SyncEditor/
 
 ## 🔐 Security Features
 
+✅ **Clerk Authentication** - Enterprise-grade user authentication and management  
+✅ **JWT Token Verification** - All WebSocket connections authenticated  
 ✅ **Input Validation** - All user inputs validated and sanitized  
 ✅ **Rate Limiting** - API and socket connection limits  
 ✅ **Security Headers** - Helmet.js protection  

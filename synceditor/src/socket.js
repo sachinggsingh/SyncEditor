@@ -7,7 +7,7 @@ class SocketManager {
     this.isConnecting = false;
   }
 
-  connect() {
+  connect(authToken = null) {
     if (this.socket) {
       return this.socket;
     }
@@ -19,7 +19,7 @@ class SocketManager {
     this.isConnecting = true;
 
     try {
-      this.socket = io(this.BACKEND_URL, {
+      const socketOptions = {
         reconnectionAttempts: 5,
         reconnectionDelay: 1000,
         reconnectionDelayMax: 5000,
@@ -27,7 +27,16 @@ class SocketManager {
         transports: ['websocket', 'polling'],
         autoConnect: true,
         withCredentials: true,
-      });
+      };
+
+      // Add auth token to connection if provided
+      if (authToken) {
+        socketOptions.auth = {
+          token: authToken
+        };
+      }
+
+      this.socket = io(this.BACKEND_URL, socketOptions);
 
       this.setupEventListeners();
       return this.socket;

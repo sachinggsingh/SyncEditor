@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useUser, useAuth } from "@clerk/clerk-react";
 import toast from "react-hot-toast";
 
 import socketManager from "../socket";
@@ -14,6 +15,8 @@ const DEBOUNCE_DELAY = 100;
 const JoinRoom = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { user, isLoaded } = useUser();
+  const { getToken } = useAuth();
   const { roomId, username } = location.state || {};
 
   const editorContainerRef = useRef(null);
@@ -31,6 +34,7 @@ const JoinRoom = () => {
   const [users, setUsers] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [message, setMessage] = useState([]);
+  const [authToken, setAuthToken] = useState(null);
 
   // Socket event handlers
   const handleUserJoined = useCallback(
@@ -43,14 +47,14 @@ const JoinRoom = () => {
     [username]
   );
 
-  const handleUserLeft = useCallback(({ socketId, userName }) => {
+  const handleUserLeft = useCallback(({ socketId, username }) => {
     setUsers((prev) => prev.filter((user) => user.socketId !== socketId));
-    toast.error(`${userName} left the room`);
+    toast.error(`${username} left the room`);
   }, []);
 
-  const handleUserDisconnected = useCallback(({ socketId, userName }) => {
+  const handleUserDisconnected = useCallback(({ socketId, username }) => {
     setUsers((prev) => prev.filter((user) => user.socketId !== socketId));
-    toast.error(`${userName} disconnected`);
+    toast.error(`${username} disconnected`);
   }, []);
 
   const handleCodeChange = useCallback(
@@ -89,17 +93,52 @@ const JoinRoom = () => {
     };
   }, [handleUserJoined, handleUserLeft, handleUserDisconnected, handleCodeChange]);
 
+  // Get Clerk session token
+  useEffect(() => {
+    const fetchToken = async () => {
+      console.log('Token Effect Triggered. User:', user?.id, 'IsLoaded:', isLoaded);
+      if (isLoaded && user) {
+        try {
+          console.log('Fetching Clerk token...');
+          const token = await getToken();
+          console.log('Clerk token received:', token ? `Token length: ${token.length}` : 'No token (null/undefined)');
+          
+          if (token) {
+            setAuthToken(token);
+          } else {
+            console.error('Failed to retrieve token from Clerk');
+            toast.error('Failed to authenticate with server');
+          }
+        } catch (error) {
+          console.error('Error getting Clerk token:', error);
+          toast.error('Authentication error: ' + error.message);
+        }
+      } else {
+        console.log('Skipping token fetch: User not loaded or not present');
+      }
+    };
+    fetchToken();
+  }, [user, isLoaded, getToken]);
+
   // Initialize socket connection
   useEffect(() => {
-    if (!roomId || !username) {
-      navigate("/");
-      return;
+    if (!roomId || !username || !authToken) {
+      if (!authToken && user) {
+        console.log('Waiting for auth token...');
+        // Still waiting for token
+        return;
+      }
+      if (!roomId || !username) {
+        navigate("/");
+        return;
+      }
     }
 
     let isInitialConnection = true;
 
-    // Connect to socket
-    const socket = socketManager.connect();
+    console.log('Connecting to socket with token...');
+    // Connect to socket with auth token
+    const socket = socketManager.connect(authToken);
 
     if (!socket) {
       toast.error("Failed to connect to server");
@@ -111,6 +150,9 @@ const JoinRoom = () => {
     socket.on('connect', () => {
       if (!isInitialConnection) {
         toast.success("Reconnected to server");
+        // Rejoin the room on reconnection to ensure server has user state
+        console.log('Rejoining room after reconnection...');
+        socketManager.joinRoom(roomId, username);
       } else {
         isInitialConnection = false;
       }
@@ -172,7 +214,7 @@ const JoinRoom = () => {
       setUsers([]);
       setMessage([]); // Clear messages on disconnect
     };
-  }, [roomId, username, navigate]);
+  }, [roomId, username, navigate, authToken, user]);
 
   const handleMessage = (content) => {
     if (isConnected && roomId) {
