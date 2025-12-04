@@ -78,9 +78,6 @@ cp .env.example .env
 npm run dev
 ```
 
-> [!IMPORTANT]
-> **Clerk Setup Required**: Follow the [Clerk Setup Guide](CLERK_SETUP.md) to configure authentication before running the application.
-
 ### Access the Application
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:5555
@@ -124,7 +121,6 @@ SyncEditor/
 
 ## 📚 Documentation
 
-- **[Clerk Setup Guide](CLERK_SETUP.md)** - Complete authentication setup instructions
 - **[Frontend Documentation](synceditor/README.md)** - React app setup, features, and usage
 - **[Backend Documentation](Server/README.md)** - Server API, Socket.IO events, and deployment
 - **[Contributing Guide](CONTRIBUTING.md)** - How to contribute to the project
